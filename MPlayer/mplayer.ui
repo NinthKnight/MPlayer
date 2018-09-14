@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>690</width>
-    <height>394</height>
+    <width>700</width>
+    <height>490</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -41,7 +41,7 @@
     <property name="geometry">
      <rect>
       <x>80</x>
-      <y>280</y>
+      <y>320</y>
       <width>521</width>
       <height>22</height>
      </rect>
@@ -54,7 +54,7 @@
     <property name="geometry">
      <rect>
       <x>180</x>
-      <y>310</y>
+      <y>350</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -67,7 +67,7 @@
     <property name="geometry">
      <rect>
       <x>370</x>
-      <y>310</y>
+      <y>350</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -80,9 +80,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>60</y>
+      <y>81</y>
       <width>671</width>
-      <height>192</height>
+      <height>211</height>
      </rect>
     </property>
     <property name="editTriggers">
@@ -106,7 +106,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>280</y>
+      <y>320</y>
       <width>41</width>
       <height>16</height>
      </rect>
@@ -119,7 +119,7 @@
     <property name="geometry">
      <rect>
       <x>620</x>
-      <y>280</y>
+      <y>320</y>
       <width>41</width>
       <height>16</height>
      </rect>
@@ -128,13 +128,42 @@
      <string>00:00</string>
     </property>
    </widget>
+   <widget class="QRadioButton" name="musicRadioButton">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>50</y>
+      <width>89</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>音乐</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="mvRadioButton">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>50</y>
+      <width>89</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>MV</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>690</width>
+     <width>700</width>
      <height>23</height>
     </rect>
    </property>

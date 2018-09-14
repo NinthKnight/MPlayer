@@ -17,6 +17,7 @@ struct ItemResult
    QString strAlbum;
    QString strHash;
    QString strDur;
+   QString strMvHash;
 };
 enum SearchStatus{Started=0x00,Searching,Finished};
 
@@ -39,6 +40,7 @@ signals:
     void sig_setBgpix(const QStringList&,const QString& author);
 public slots:
     void requestMv(const QString&);
+	void requestNewMv(const QString&);
     void requestalbum(const QString &name,const QString &savelocal);
     void requestSong(const QString&);
     void requestSongNextPage();

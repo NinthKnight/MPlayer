@@ -17,6 +17,9 @@ public:
 protected:
 	void closeEvent(QCloseEvent *event);
 
+signals:
+	void sig_requestMv(QString);
+
 public slots:
 	void slot_stop();
 	void slot_play();
@@ -34,12 +37,15 @@ public slots:
 
 private:
 	Ui::MPlayerClass ui;
+	QButtonGroup* m_musicGroup;
+
 
 	FFmpegPlayer m_ffplayer;
 	MyNetWork m_net;
 
 	QList<ItemResult> m_songlist;
 	QMap<int, QString> m_hashmap;
+	QMap<int, QString> m_MvHashmap;
 
 	QMenu* m_popMenu;
 	QAction* m_actLyc; //¸è´Ê

@@ -24,19 +24,29 @@ MPlayer::MPlayer(QWidget *parent)
 	m_popMenu->addAction(m_actMv);
 	m_popMenu->addAction(m_actDownLoad);
 
+	//添加搜索按钮
+	m_musicGroup = new QButtonGroup;
+	m_musicGroup->addButton(ui.musicRadioButton);
+	m_musicGroup->addButton(ui.mvRadioButton);
+	ui.musicRadioButton->setChecked(true);
 
-
-
+	//关联各种信号-槽
+	//播放音乐&mv
 	connect(&m_net, SIGNAL(sig_reqSongStatus(ItemResult, SearchStatus)), this, SLOT(slot_requestSong(ItemResult, SearchStatus)));
+	connect(this, SIGNAL(sig_requestMv(QString)), &m_net, SLOT(requestMv(QString)));
+	connect(&m_net, SIGNAL(sig_requestMvfinished(QString)), this, SLOT(slot_showMvWidget(QString)));
+	
+	//时长
 	connect(&m_ffplayer, SIGNAL(sig_PositionChange(qint64)), this, SLOT(slot_positionChange(qint64)));
 
-
+	//菜单
 	connect(ui.tableWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_LMenu(QPoint)));
 	connect(m_actLyc, SIGNAL(triggered()), this, SLOT(slot_tableWidget_Lyc()));
 	connect(m_actMv, SIGNAL(triggered()), this, SLOT(slot_tableWidget_Mv()));
 	connect(m_actDownLoad, SIGNAL(triggered()), this, SLOT(slot_tableWidget_DownLoad()));
 
 }
+
 
 
 void MPlayer::slot_LMenu(QPoint pos)
@@ -53,6 +63,14 @@ void MPlayer::slot_tableWidget_Lyc()
 
 void MPlayer::slot_tableWidget_Mv()
 {
+	if (ui.tableWidget->rowCount() > 0 && ui.tableWidget->currentRow() >= 0) {
+		
+		int row = ui.tableWidget->currentRow();
+		QString mvHash = m_MvHashmap[row];
+
+		//slot_doublick(m_prebgItem, 1, true); //mv
+		emit sig_requestMv(mvHash);
+	}
 }
 
 void MPlayer::slot_tableWidget_DownLoad()
@@ -91,6 +109,8 @@ void MPlayer::slot_requestSong(const ItemResult &result, SearchStatus status)
 	{
 		m_songlist.clear();
 		m_hashmap.clear();
+		m_MvHashmap.clear();
+
 		int count = ui.tableWidget->rowCount();
 		for (int i = 0; i<count; i++)
 		{
@@ -105,7 +125,7 @@ void MPlayer::slot_requestSong(const ItemResult &result, SearchStatus status)
 
 		m_songlist.append(result);
 		m_hashmap.insert(row, result.strHash);
-
+		m_MvHashmap.insert(row, result.strMvHash);
 
 		ui.tableWidget->insertRow(row);
 		ui.tableWidget->setItem(row, 0, new QTableWidgetItem(result.strMusicName));
@@ -127,7 +147,14 @@ void MPlayer::slot_search() {
 		return;
 	}
 
-	m_net.requestSong(strSongName);
+	//搜索音乐
+	if (ui.musicRadioButton->isChecked()) {
+		m_net.requestSong(strSongName);
+	}
+	else {
+		m_net.requestNewMv(strSongName);
+	}
+	
 }
 
 void  MPlayer::slot_play_music(int nRow, int nColumn)

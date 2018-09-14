@@ -23,6 +23,11 @@
 #define KGLrcPart2 "http://lyrics.kugou.com/download?ver=1&client=pc&id=%1&accesskey=%2&fmt=krc"
 
 #define ITWUSUN "http://api.itwusun.com/music/search/wy/%1?format=json&keyword=%2&sign=a5cc0a8797539d3a1a4f7aeca5b695b9"
+
+#define MV_SEARCH_URL "http://mvsearch.kugou.com/mv_search?keyword=%1&page=1&pagesize=30&userid=-1&clientver=&platform=WebFilter&tag=em&filter=2&iscorrection=1&privilege_filter=0&_=1515052279917"
+
+#define MV_URL "http://m.kugou.com/app/i/mv.php?cmd=100&hash=%1&ismp3=1&ext=mp4"
+
 /*
  *  a new API =====>    http://s.music.163.com/search/get/?type=1&s=  ¸èÇúÃû/¸èÊÖÃû  &limit=5000
  *  a new API too-----> http://api.itwusun.com/music/search/wy/2?format=json&keyword=³ÂÞÈÑ¸&sign=a5cc0a8797539d3a1a4f7aeca5b695b9
@@ -264,8 +269,72 @@ void MyNetWork::requestSong(const QString &strReq)//ÇëÇó¸èÇú
     QJsonArray array0= obj01.value("lists").toArray();
     QJsonObject obj02= array0.at(0).toObject();
     QString hash= obj02.value("FileHash").toString();*/
-
 }
+
+void MyNetWork::requestNewMv(const QString &mvname)//ÇëÇóMv
+{
+	ItemResult Item = { 0 };
+	emit sig_reqSongStatus(Item, SearchStatus::Started);
+
+	QString strTemp(MV_SEARCH_URL);
+
+	QByteArray byt = QString(mvname).replace("&", " ").toUtf8().toPercentEncoding();
+
+	strTemp = strTemp.arg(QString(byt));
+
+	QNetworkRequest request;
+	QNetworkAccessManager manger;
+	request.setUrl(strTemp);
+	QNetworkReply *reply = manger.get(request);
+
+	QEventLoop loop;
+	connect(&manger, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+	loop.exec();
+
+	if (reply->error() == QNetworkReply::NoError)
+	{
+		QByteArray bytTemp = reply->readAll();
+		reply->deleteLater();
+		QJsonDocument doc0 = QJsonDocument::fromJson(bytTemp);
+		QJsonObject objTemp = doc0.object();
+		objTemp = objTemp.value("data").toObject();
+		QJsonArray array0 = objTemp.value("lists").toArray();
+		for (int i = 0; i<array0.size(); ++i)
+		{
+			objTemp = array0.at(i).toObject();
+
+			Item.strFullName = objTemp.value("FileName").toString().replace(QString("<em>"), QString("")).replace(QString("</em>"), QString(""));;
+			Item.strHash = objTemp.value("FileHash").toString();
+			Item.strMusicName = objTemp.value("MvName").toString().replace(QString("<em>"), QString("")).replace(QString("</em>"), QString(""));
+			Item.strSinger = objTemp.value("SingerName").toString();
+			Item.strMvHash = objTemp.value("MvHash").toString();
+
+			int ndur = objTemp.value("Duration").toInt();
+			QTime time(0, ndur / 60, ndur % 60);
+			Item.strDur = time.toString("mm:ss");
+
+			strTemp = URL_KGPLAY;
+			strTemp = strTemp.arg(Item.strHash);
+			request.setUrl(strTemp);
+
+			QNetworkReply *reply = manger.get(request);
+			loop.exec();
+			if (reply->error() == QNetworkReply::NoError)
+			{
+				bytTemp = reply->readAll();
+				QJsonDocument doc0 = QJsonDocument::fromJson(bytTemp);
+				objTemp = doc0.object();
+				Item.strUrl = "";
+				Item.strUrl = objTemp.value("url").toString();
+				emit sig_reqSongStatus(Item, SearchStatus::Searching);
+			}
+			reply->deleteLater();
+		}
+	}
+	emit sig_reqSongStatus(Item, SearchStatus::Finished);
+	reply->deleteLater();
+}
+
 
 
 
@@ -417,11 +486,11 @@ const QImage &MyNetWork::BgWhiteChange(QImage &image , int brightness)
 
 void MyNetWork::requestMv(const QString &mvname)
 {
-    QString strTemp(ITWUSUN);
+    QString strTemp(MV_URL);
     QByteArray byt=QString(mvname).replace("&"," ").toUtf8().toPercentEncoding();
     QNetworkRequest request;
     QNetworkAccessManager manger;
-    request.setUrl(strTemp.arg(1).arg(QString(byt)));
+    request.setUrl(strTemp.arg(mvname));
     QNetworkReply *reply1= manger.get(request);
 ///loop1
     QEventLoop loop1;
@@ -433,12 +502,19 @@ void MyNetWork::requestMv(const QString &mvname)
    {
         QByteArray arry=reply1->readAll();
 
-        QJsonDocument doc=QJsonDocument::fromJson(arry);
-        QJsonArray array=doc.array();
-        QJsonObject obj=array.at(0).toObject();
-        QString url= obj.value("MvUrl").toString();//Ìí¼Ómp3Url
-        if(!url.isEmpty())
-         emit sig_requestMvfinished(url);
+        //QJsonDocument doc=QJsonDocument::fromJson(arry);
+       // QJsonArray array=doc.array();
+
+		QJsonDocument doc0 = QJsonDocument::fromJson(arry);
+		QJsonObject objTemp = doc0.object();
+		objTemp = objTemp.value("mvdata").toObject();
+		objTemp = objTemp.value("le").toObject();
+
+        QString url= objTemp.value("downurl").toString();//Ìí¼Ómp3Url
+		if (!url.isEmpty()) {
+			emit sig_requestMvfinished(url);
+		}
+         
    }
    else
    {
