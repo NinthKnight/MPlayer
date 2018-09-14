@@ -2,7 +2,10 @@
 ---
 a simple music player write by qt
 
+>v 0.0.2
+* 1.新增mv支持。
 
+>v 0.0.1
 * 1.使用ffmpeg播放音视频。
 * 2.使用酷狗api接口。
 * 3.支持音乐在线搜索及播放等简单功能。

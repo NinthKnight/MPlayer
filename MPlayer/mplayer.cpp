@@ -1,5 +1,6 @@
 #include "mplayer.h"
 #include <QTableWidgetItem>
+#include "MvWidget.h"
 
 
 MPlayer::MPlayer(QWidget *parent)
@@ -44,6 +45,14 @@ MPlayer::MPlayer(QWidget *parent)
 	connect(m_actLyc, SIGNAL(triggered()), this, SLOT(slot_tableWidget_Lyc()));
 	connect(m_actMv, SIGNAL(triggered()), this, SLOT(slot_tableWidget_Mv()));
 	connect(m_actDownLoad, SIGNAL(triggered()), this, SLOT(slot_tableWidget_DownLoad()));
+
+	//创建一个非模态的Mv Widget
+	m_pWidget = new MvWidget(this);
+	if (m_pWidget != NULL) {
+		connect(&m_ffplayer, SIGNAL(sig_CurImageChange(QImage)), m_pWidget->m_pFrame, SLOT(slot_imageMV(QImage)));
+	}
+
+	m_pWidget->hide();
 
 }
 
@@ -194,4 +203,16 @@ void MPlayer::slot_positionChange(qint64 length)
 void MPlayer::closeEvent(QCloseEvent *event)
 {
 	m_ffplayer.stop();
+}
+
+void MPlayer::slot_showMvWidget(const QString& url)
+{
+	if (!url.isEmpty())
+	{
+		m_ffplayer.setMedia(url, true);
+		m_ffplayer.play();
+
+		m_pWidget->show();
+	}
+
 }

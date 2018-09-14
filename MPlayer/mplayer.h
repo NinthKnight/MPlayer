@@ -4,6 +4,7 @@
 #include "ui_mplayer.h"
 #include "PlayCore\FFmpegPlayer.h"
 #include "netWork\mynetwork.h"
+#include "MvWidget.h"
 
 class MPlayer : public QMainWindow
 {
@@ -34,6 +35,8 @@ public slots:
 	void slot_tableWidget_Mv();
 	void slot_tableWidget_DownLoad();
 
+	void slot_showMvWidget(const QString& url);
+
 
 private:
 	Ui::MPlayerClass ui;
@@ -42,6 +45,8 @@ private:
 
 	FFmpegPlayer m_ffplayer;
 	MyNetWork m_net;
+	MvWidget* m_pWidget;
+
 
 	QList<ItemResult> m_songlist;
 	QMap<int, QString> m_hashmap;
