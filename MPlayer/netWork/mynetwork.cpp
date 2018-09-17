@@ -5,6 +5,8 @@
 #include<QJsonObject>
 #include<QEventLoop>
 #include<QDebug>
+#include <QCoreApplication>
+#include <QDir>
 
 //play method
 //http://m.kugou.com/app/i/getSongInfo.php?cmd=playInfo&hash=
@@ -523,6 +525,115 @@ void MyNetWork::requestMv(const QString &mvname)
    }
    reply1->deleteLater();
 }
+
+void MyNetWork::Download(const QString&  url)
+{
+	m_request.setUrl(url);
+	m_pDownloadReply = m_downloadManager.get(m_request);
+
+	int nIndex = url.lastIndexOf('/', -1);
+	if (nIndex < 0) {
+		m_pDownloadReply->deleteLater();
+		return;
+	}
+
+	QString strPath = QCoreApplication::applicationDirPath();
+
+	int nRight = url.length() - nIndex - 1;
+	QString fileName = url.right(nRight);
+
+	strPath += "/Download/";
+	
+	QDir tempDir;
+	//如果filePath路径不存在，创建它
+	if (!tempDir.exists(strPath))
+	{
+		qDebug() << "不存在该路径: " << strPath << endl;
+		tempDir.mkpath(strPath);
+	}
+
+	strPath += fileName;
+
+	m_File.setFileName(strPath);
+	m_File.open(QIODevice::WriteOnly);
+	if (m_File.isOpen()) {
+		connect(m_pDownloadReply, SIGNAL(readyRead()), this, SLOT(slot_ReplyRead()));
+		connect(m_pDownloadReply, SIGNAL(finished()), this, SLOT(slot_ReplyFinished()));
+		connect(m_pDownloadReply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(slot_Replyerror(QNetworkReply::NetworkError)));
+	}
+}
+
+void MyNetWork::downloadMv(const QString &mvname)
+{
+	QString strTemp(MV_URL);
+	QByteArray byt = QString(mvname).replace("&", " ").toUtf8().toPercentEncoding();
+	QNetworkRequest request;
+	QNetworkAccessManager manger;
+	request.setUrl(strTemp.arg(mvname));
+	QNetworkReply *reply1 = manger.get(request);
+	///loop1
+	QEventLoop loop1;
+	connect(reply1, SIGNAL(finished()), &loop1, SLOT(quit()));
+	loop1.exec();
+	///
+
+	if (reply1->error() == QNetworkReply::NoError)
+	{
+		QByteArray arry = reply1->readAll();
+
+		//QJsonDocument doc=QJsonDocument::fromJson(arry);
+		// QJsonArray array=doc.array();
+
+		QJsonDocument doc0 = QJsonDocument::fromJson(arry);
+		QJsonObject objTemp = doc0.object();
+		objTemp = objTemp.value("mvdata").toObject();
+		objTemp = objTemp.value("le").toObject();
+
+		QString url = objTemp.value("downurl").toString();//添加mp3Url
+		if (!url.isEmpty()) {
+			//这里获取了url，直接下载保存
+			Download(url);
+		}
+	}
+	else
+	{
+		reply1->deleteLater();
+		return;
+	}
+	reply1->deleteLater();
+}
+
+void MyNetWork::slot_Replyerror(QNetworkReply::NetworkError code) {
+
+	qDebug() << m_pDownloadReply->errorString() << endl;
+}
+
+void MyNetWork::slot_ReplyRead() {
+
+	//开始写文件
+
+	QByteArray bytes = m_pDownloadReply->readAll();  //获取字节  
+
+	m_File.write(bytes);
+
+}
+
+void MyNetWork::slot_ReplyFinished() {
+
+	//获取响应的信息，状态码为200表示正常  
+	QVariant status_code = m_pDownloadReply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+
+	//无错误返回  
+	if (m_pDownloadReply->error() == QNetworkReply::NoError)
+	{
+		QByteArray bytes = m_pDownloadReply->readAll();  //获取字节  
+		m_File.write(bytes);
+	}
+
+	m_File.close();
+	m_pDownloadReply->deleteLater();
+}
+
 
 void MyNetWork::requestBgPic(const QString &author)
 {

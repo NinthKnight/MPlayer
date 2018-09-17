@@ -8,6 +8,8 @@ MPlayer::MPlayer(QWidget *parent)
 {
 	ui.setupUi(this);
 
+	m_IsSearchMv = false;
+
 	//设置标题
 	QStringList longerList = (QStringList() << QStringLiteral("歌名") << QStringLiteral("歌手名") << QStringLiteral("专辑名") << QStringLiteral("时长"));
 	ui.tableWidget->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
@@ -35,6 +37,7 @@ MPlayer::MPlayer(QWidget *parent)
 	//播放音乐&mv
 	connect(&m_net, SIGNAL(sig_reqSongStatus(ItemResult, SearchStatus)), this, SLOT(slot_requestSong(ItemResult, SearchStatus)));
 	connect(this, SIGNAL(sig_requestMv(QString)), &m_net, SLOT(requestMv(QString)));
+	connect(this, SIGNAL(sig_downloadMv(QString)), &m_net, SLOT(downloadMv(QString)));
 	connect(&m_net, SIGNAL(sig_requestMvfinished(QString)), this, SLOT(slot_showMvWidget(QString)));
 	
 	//时长
@@ -55,8 +58,6 @@ MPlayer::MPlayer(QWidget *parent)
 	m_pWidget->hide();
 
 }
-
-
 
 void MPlayer::slot_LMenu(QPoint pos)
 {
@@ -84,9 +85,27 @@ void MPlayer::slot_tableWidget_Mv()
 
 void MPlayer::slot_tableWidget_DownLoad()
 {
+	//开始下载
+	if (ui.tableWidget->rowCount() > 0 && ui.tableWidget->currentRow() >= 0) {
 
+		int row = ui.tableWidget->currentRow();
+
+		if (m_IsSearchMv)
+		{
+			QString mvHash = m_MvHashmap[row];
+
+			emit sig_downloadMv(mvHash);
+		}
+		else {
+			const ItemResult &result = GetItemByIndex(row);
+
+			if (!result.strUrl.isEmpty())
+			{
+				m_net.Download(result.strUrl);
+			}
+		}
+	}
 }
-
 
 
 void MPlayer::slot_play()
@@ -159,9 +178,11 @@ void MPlayer::slot_search() {
 	//搜索音乐
 	if (ui.musicRadioButton->isChecked()) {
 		m_net.requestSong(strSongName);
+		m_IsSearchMv = false;
 	}
 	else {
 		m_net.requestNewMv(strSongName);
+		m_IsSearchMv = true;
 	}
 	
 }

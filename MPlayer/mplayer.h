@@ -20,6 +20,7 @@ protected:
 
 signals:
 	void sig_requestMv(QString);
+	void sig_downloadMv(QString);
 
 public slots:
 	void slot_stop();
@@ -56,4 +57,6 @@ private:
 	QAction* m_actLyc; //∏Ë¥ 
 	QAction* m_actMv; //mv
 	QAction* m_actDownLoad; //œ¬‘ÿ
+
+	bool m_IsSearchMv;
 };
