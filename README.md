@@ -2,6 +2,9 @@
 ---
 a simple music player write by qt
 
+>v 0.0.3
+* 1.新增下载功能。
+
 >v 0.0.2
 * 1.新增mv支持。
 
